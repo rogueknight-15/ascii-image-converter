@@ -15,8 +15,8 @@ make
 
 ### Example
 ```Console
-./aic test.jpg test_out.jpg
+./aic ../res/test.jpg ../res/test_out.jpg
 ```
 
-<img src="build/test.jpg" width=400>
-<img src="build/test_out.jpg" width=400>
+<img src="res/test.jpg" width=400>
+<img src="res/test_out.jpg" width=400>
