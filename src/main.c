@@ -86,6 +86,11 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    unsigned char bg_color = 128;
+    for (int i = 0; i < output_width * output_height * 3; i++) {
+        output_buffer[i] = bg_color;
+    }
+
     for (int y = 0; y < scaled_height; y++) {
         for (int x = 0; x < scaled_width; x++) {
             int src_x = x * CHAR_SIZE;
@@ -98,9 +103,34 @@ int main(int argc, char **argv) {
 
             float grayscale = (0.299f * r + 0.587f * g + 0.114f * b) / 255.0f;
 
+            float gamma = 2.2f;
+            float corrected_grayscale = pow(grayscale, 1.0f / gamma);
+
             int num_chars = strlen(ASCII_CHARS);
-            int gray_index = (int) (grayscale * (num_chars - 1));
+            int gray_index = (int) (corrected_grayscale * (num_chars - 1));
             unsigned char ascii_character = ASCII_CHARS[gray_index];
+
+
+            float contrast_factor = 0.6f; 
+            float avg_brightness = grayscale * 255.0f;
+
+            unsigned char bg_r = r;
+            unsigned char bg_g = g;
+            unsigned char bg_b = b;
+
+            unsigned char fg_r = bg_r * contrast_factor;
+            unsigned char fg_g = bg_g * contrast_factor;
+            unsigned char fg_b = bg_b * contrast_factor;
+
+            if (avg_brightness > 128) {
+                fg_r = bg_r * (1.0f - contrast_factor);
+                fg_g = bg_g * (1.0f - contrast_factor);
+                fg_b = bg_b * (1.0f - contrast_factor);
+            } else {
+                fg_r = bg_r + (255.0f - bg_r) * contrast_factor;
+                fg_g = bg_g + (255.0f - bg_g) * contrast_factor;
+                fg_b = bg_b + (255.0f - bg_b) * contrast_factor;
+            }
 
             for (int dy = 0; dy < CHAR_SIZE; dy++) {
                 for (int dx = 0; dx < CHAR_SIZE; dx++) {
@@ -110,11 +140,15 @@ int main(int argc, char **argv) {
 
                     unsigned char pixel_on = font[ascii_character][dy] & (1 << (7 - dx));
                     if (pixel_on) {
-                        output_buffer[index] = r;
-                        output_buffer[index + 1] = g;
-                        output_buffer[index + 2] = b;
+                        output_buffer[index] = fg_r;
+                        output_buffer[index + 1] = fg_g;
+                        output_buffer[index + 2] = fg_b;
+                    } else {
+                        output_buffer[index] = bg_r;
+                        output_buffer[index + 1] = bg_g;
+                        output_buffer[index + 2] = bg_b;
                     }
-                }    
+                }
             }
         }
     }
